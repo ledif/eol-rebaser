@@ -5,6 +5,7 @@ from unittest.mock import Mock, patch, MagicMock
 from pathlib import Path
 import tempfile
 import os
+import subprocess
 
 # Import modules to test
 from eol_rebaser.config import ConfigManager
@@ -241,7 +242,5 @@ class TestNotificationManager(unittest.TestCase):
             "Test reason"
         )
 
-
 if __name__ == '__main__':
-    import subprocess
     unittest.main()

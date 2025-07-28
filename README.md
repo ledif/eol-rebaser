@@ -58,7 +58,7 @@ The regex patterns use capture groups `()` to extract parts of the source image,
 ### Setup
 
 ```bash
-uv sync
+uv sync --extra dev
 uv run eol-rebaser --help
 ```
 
