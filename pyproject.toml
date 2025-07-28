@@ -9,7 +9,7 @@ description = "Automatically rebase bootc systems when images reach end of life"
 readme = "README.md"
 license = {file = "LICENSE"}
 authors = [
-    {name = "Adam Dedekker", email = "adam@dedekker.dev"},
+    {name = "Adam Fidel", email = "adam@fidel.cloud"},
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -40,7 +40,7 @@ eol_rebaser = ["data/*"]
 name = "eol-rebaser"
 version = "0.1.0"
 description = "Automatically rebase bootc systems when images reach end of life"
-authors = ["Adam Dedekker <adam@dedekker.dev>"]
+authors = ["Adam Fidel <adam@fidel.cloud>"]
 readme = "README.md"
 packages = [{include = "eol_rebaser", from = "src"}]
 

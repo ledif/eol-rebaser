@@ -84,6 +84,33 @@ class ImageMigrator:
         logger.debug(f"Migration {migration['name']} is applicable")
         return True
         
+    def _resolve_target_image(self, migration: Dict[str, Any], current_image: str) -> str:
+        """Resolve target image using regex substitution if needed.
+        
+        Args:
+            migration: Migration configuration
+            current_image: Current container image name
+            
+        Returns:
+            Resolved target image name
+        """
+        target_template = migration.get("to_image", "")
+        from_pattern = migration.get("from_pattern", "")
+        
+        # Check if target template contains regex substitution patterns
+        if "\\" in target_template and from_pattern:
+            try:
+                # Use regex substitution to transform the image name
+                target_image = re.sub(from_pattern, target_template, current_image)
+                logger.debug(f"Resolved target image: {current_image} -> {target_image}")
+                return target_image
+            except re.error as e:
+                logger.error(f"Failed to resolve target image pattern: {e}")
+                return target_template
+        else:
+            # Use target template as-is (legacy behavior)
+            return target_template
+
     def perform_migration(self, migration: Dict[str, Any], 
                          force: bool = False) -> bool:
         """Perform the specified migration.
@@ -96,10 +123,19 @@ class ImageMigrator:
             True if migration was successful, False otherwise
         """
         migration_name = migration.get("name", "Unknown")
-        target_image = migration.get("to_image", "")
         reason = migration.get("reason", "Image migration")
         
+        # Get current image for target resolution
+        current_image = self.bootc_manager.get_current_image()
+        if not current_image:
+            logger.error("Could not determine current image")
+            return False
+            
+        # Resolve target image using regex substitution if needed
+        target_image = self._resolve_target_image(migration, current_image)
+        
         logger.info(f"Starting migration: {migration_name}")
+        logger.info(f"Current image: {current_image}")
         logger.info(f"Target image: {target_image}")
         logger.info(f"Reason: {reason}")
         
@@ -109,7 +145,6 @@ class ImageMigrator:
             return False
             
         # Check if we're already on the target image
-        current_image = self.bootc_manager.get_current_image()
         if current_image == target_image:
             logger.info("Already on target image, no migration needed")
             return True
@@ -236,8 +271,16 @@ class ImageMigrator:
                 
         # Validate target image
         target_image = migration.get("to_image", "")
-        if target_image and not self.bootc_manager.validate_image_reference(target_image):
-            errors.append(f"Invalid target image reference: {target_image}")
+        if target_image:
+            # If target contains regex substitution patterns, validate differently
+            if "\\" in target_image:
+                # For regex substitution patterns, just check basic format
+                if not target_image.strip():
+                    errors.append("Target image template cannot be empty")
+            else:
+                # For literal target images, validate as normal image reference
+                if not self.bootc_manager.validate_image_reference(target_image):
+                    errors.append(f"Invalid target image reference: {target_image}")
             
         # Validate effective date
         effective_date = migration.get("effective_date")
