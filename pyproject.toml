@@ -1,0 +1,67 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "eol-rebaser"
+version = "0.1.0"
+description = "Automatically rebase bootc systems when images reach end of life"
+readme = "README.md"
+license = {file = "LICENSE"}
+authors = [
+    {name = "Adam Dedekker", email = "adam@dedekker.dev"},
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+]
+requires-python = ">=3.13"
+dependencies = []
+
+[project.scripts]
+eol-rebaser = "eol_rebaser.main:main"
+
+[project.urls]
+Homepage = "https://github.com/ublue-os/eol-rebaser"
+Repository = "https://github.com/ublue-os/eol-rebaser"
+Issues = "https://github.com/ublue-os/eol-rebaser/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+eol_rebaser = ["data/*"]
+
+[tool.poetry]
+name = "eol-rebaser"
+version = "0.1.0"
+description = "Automatically rebase bootc systems when images reach end of life"
+authors = ["Adam Dedekker <adam@dedekker.dev>"]
+readme = "README.md"
+packages = [{include = "eol_rebaser", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.13"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0.0"
+black = "^24.0.0"
+flake8 = "^7.0.0"
+mypy = "^1.8.0"
+
+[tool.poetry.scripts]
+eol-rebaser = "eol_rebaser.main:main"
+
+[tool.black]
+line-length = 88
+target-version = ['py313']
+
+[tool.mypy]
+python_version = "3.13"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
