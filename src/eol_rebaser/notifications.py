@@ -114,7 +114,7 @@ class NotificationManager:
             f"Migration '{migration_name}' failed.\n"
             f"Error: {error}\n\n"
             f"Your system remains on the current image. "
-            f"Check system logs for more details."
+            f"Check journalctl for more details."
         )
         
         logger.error(f"Migration failed: {migration_name} - {error}")

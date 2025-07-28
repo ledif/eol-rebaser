@@ -31,7 +31,6 @@ SystemCallErrorNumber=EPERM
 ReadWritePaths=/var/lib/containers
 ReadWritePaths=/var/lib/bootc
 ReadWritePaths=/boot
-ReadWritePaths=/var/log
 
 # Logging
 StandardOutput=journal

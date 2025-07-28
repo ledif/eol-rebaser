@@ -26,8 +26,7 @@ def setup_logging(verbose: bool = False) -> None:
         level=level,
         format=format_string,
         handlers=[
-            logging.StreamHandler(sys.stdout),
-            logging.FileHandler("/var/log/eol-rebaser.log", mode="a")
+            logging.StreamHandler(sys.stdout)
         ]
     )
 
