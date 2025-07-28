@@ -1,0 +1,12 @@
+[Unit]
+Description=Run EOL Rebaser periodically
+Requires=eol-rebaser.service
+
+[Timer]
+# Run daily at 3 AM
+OnCalendar=daily
+Persistent=true
+RandomizedDelaySec=1800
+
+[Install]
+WantedBy=timers.target
