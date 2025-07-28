@@ -20,7 +20,9 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
 ]
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "PyYAML >= 6.0",
+]
 
 [project.scripts]
 eol-rebaser = "eol_rebaser.main:main"
@@ -46,6 +48,7 @@ packages = [{include = "eol_rebaser", from = "src"}]
 
 [tool.poetry.dependencies]
 python = "^3.13"
+PyYAML = "^6.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0.0"

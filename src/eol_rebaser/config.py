@@ -6,12 +6,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-try:
-    import yaml
-except ImportError:
-    # Fallback for systems without PyYAML
-    import json as yaml
-    yaml.safe_load = json.loads  # type: ignore
+import yaml
 
 
 logger = logging.getLogger(__name__)
@@ -81,54 +76,16 @@ class ConfigManager:
         """
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
-                content = f.read()
+                content = yaml.safe_load(f)
+                return content or {}
                 
-            # Try YAML first, fall back to simple key=value if needed
-            try:
-                return yaml.safe_load(content) or {}
-            except Exception:
-                # Fallback for simple key=value format
-                logger.warning(f"Could not parse {file_path} as YAML, trying simple format")
-                return self._parse_simple_config(content)
-                
+        except yaml.YAMLError as e:
+            logger.error(f"Failed to parse YAML from {file_path}: {e}")
+            raise ValueError(f"Invalid YAML configuration file {file_path}: {e}")
         except Exception as e:
             logger.error(f"Failed to load configuration from {file_path}: {e}")
             raise ValueError(f"Invalid configuration file {file_path}: {e}")
             
-    def _parse_simple_config(self, content: str) -> Dict[str, Any]:
-        """Parse simple key=value configuration format.
-        
-        Args:
-            content: Configuration file content
-            
-        Returns:
-            Parsed configuration dictionary
-        """
-        config = {"migrations": []}
-        current_migration = {}
-        
-        for line in content.split('\n'):
-            line = line.strip()
-            if not line or line.startswith('#'):
-                continue
-                
-            if '=' in line:
-                key, value = line.split('=', 1)
-                key = key.strip()
-                value = value.strip().strip('"\'')
-                
-                if key == "name" and current_migration:
-                    # Start new migration
-                    config["migrations"].append(current_migration)
-                    current_migration = {}
-                    
-                current_migration[key] = value
-                
-        if current_migration:
-            config["migrations"].append(current_migration)
-            
-        return config
-        
     def _merge_configs(self, base_config: Dict[str, Any], 
                       drop_ins: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Merge drop-in configurations into base configuration.
