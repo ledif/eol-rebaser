@@ -56,6 +56,7 @@ install -Dm644 data/eol-rebaser.timer %{buildroot}%{_unitdir}/eol-rebaser.timer
 %files -f %{pyproject_files}
 %license LICENSE
 %doc README.md
+%{_bindir}/eol-rebaser
 %{_unitdir}/eol-rebaser.service
 %{_unitdir}/eol-rebaser.timer
 
