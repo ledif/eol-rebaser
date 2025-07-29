@@ -37,6 +37,37 @@ clean:
     find . -type f -name "*.pyc" -delete
     find . -type d -name "*.egg-info" -exec rm -rf {} + 2>/dev/null || true
 
+# Bump version and create release
+release version: (_update-version version) (_commit-and-tag version)
+    @echo "Release {{version}} created and pushed!"
+
+# Update version in all files
+_update-version version:
+    @echo "Updating version to {{version}}"
+    # Update pyproject.toml
+    sed -i 's/^version = .*/version = "{{version}}"/' pyproject.toml
+    # Update spec file
+    sed -i 's/^Version:.*/Version:        {{version}}/' eol-rebaser.spec
+    # Update __init__.py if it exists
+    @if [ -f src/eol_rebaser/__init__.py ]; then \
+        sed -i 's/__version__ = .*/__version__ = "{{version}}"/' src/eol_rebaser/__init__.py; \
+    fi
+    # Update main.py version
+    sed -i 's/version="%(prog)s [0-9.]*"/version="%(prog)s {{version}}"/' src/eol_rebaser/main.py
+
+# Commit changes and create tag
+_commit-and-tag version:
+    @echo "Committing and tagging version {{version}}"
+    git add pyproject.toml eol-rebaser.spec src/eol_rebaser/__init__.py src/eol_rebaser/main.py
+    git commit -m "Bump version to {{version}}"
+    git tag -a "v{{version}}" -m "Release version {{version}}"
+    git push origin main
+    git push origin "v{{version}}"
+
+# Show current version
+version:
+    @grep '^version = ' pyproject.toml | sed 's/version = "//' | sed 's/"//'
+
 # Show help
 help:
     @just --list

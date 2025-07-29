@@ -1,0 +1,66 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build setuptools wheel
+
+      - name: Get version from tag
+        id: get_version
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Build Python package
+        run: |
+          python -m build
+
+      - name: Create source tarball for RPM
+        run: |
+          git archive --format=tar.gz --prefix=eol-rebaser-${{ steps.get_version.outputs.version }}/ \
+            HEAD > eol-rebaser-${{ steps.get_version.outputs.version }}.tar.gz
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          if git describe --tags --abbrev=0 HEAD~1 >/dev/null 2>&1; then
+            PREV_TAG=$(git describe --tags --abbrev=0 HEAD~1)
+            echo "## Changes since ${PREV_TAG}" > CHANGELOG.md
+            git log --pretty=format:"- %s (%h)" ${PREV_TAG}..HEAD >> CHANGELOG.md
+          else
+            echo "## Initial Release" > CHANGELOG.md
+            echo "- First release of eol-rebaser" >> CHANGELOG.md
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ steps.get_version.outputs.version }}
+          body_path: CHANGELOG.md
+          files: |
+            eol-rebaser-${{ steps.get_version.outputs.version }}.tar.gz
+            dist/eol_rebaser-${{ steps.get_version.outputs.version }}-py3-none-any.whl
+            dist/eol_rebaser-${{ steps.get_version.outputs.version }}.tar.gz

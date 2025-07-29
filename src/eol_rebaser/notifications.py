@@ -22,23 +22,11 @@ class NotificationManager:
             True if desktop notifications are available, False otherwise
         """
         try:
-            # Check if we're running in a desktop session
-            result = subprocess.run(
-                ["loginctl", "show-session", "self", "-p", "Type", "--value"],
-                capture_output=True,
-                text=True,
-                timeout=5,
+            subprocess.run(
+                ["which", "notify-send"], capture_output=True, check=True, timeout=5
             )
-            session_type = result.stdout.strip()
-
-            # Check for graphical session types
-            if session_type in ("x11", "wayland"):
-                # Verify notify-send is available
-                subprocess.run(
-                    ["which", "notify-send"], capture_output=True, check=True, timeout=5
-                )
-                logger.debug("Desktop notifications available")
-                return True
+            logger.debug("Desktop notifications available")
+            return True
 
         except (
             subprocess.CalledProcessError,
@@ -67,7 +55,6 @@ class NotificationManager:
             f"From: {from_image}\n"
             f"To: {to_image}\n"
             f"Reason: {reason}\n\n"
-            f"Your system will reboot after the migration completes."
         )
 
         logger.info(f"Migration starting: {migration_name}")
@@ -175,9 +162,18 @@ class NotificationManager:
             else:
                 cmd.extend(["--urgency=normal"])
 
-            subprocess.run(cmd, capture_output=True, timeout=10)
+            logger.debug(f"Running notification command: {' '.join(cmd)}")
 
-            logger.debug(f"Desktop notification sent: {title}")
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+
+            if result.returncode == 0:
+                logger.debug(f"Desktop notification sent successfully: {title}")
+            else:
+                logger.warning(
+                    f"notify-send failed with return code {result.returncode}"
+                )
+                logger.warning(f"stderr: {result.stderr}")
+                logger.warning(f"stdout: {result.stdout}")
 
         except Exception as e:
             logger.warning(f"Failed to send desktop notification: {e}")

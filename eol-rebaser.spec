@@ -4,8 +4,8 @@ Release:        1%{?dist}
 Summary:        Automatically rebase bootc systems when images reach end of life
 
 License:        Apache-2.0
-URL:            https://github.com/ublue-os/eol-rebaser
-Source0:        %{name}-%{version}.tar.gz
+URL:            https://github.com/ledif/eol-rebaser
+Source0:        https://github.com/ledif/eol-rebaser/archive/v%{version}/%{name}-%{version}.tar.gz
 
 BuildArch:      noarch
 BuildRequires:  python3-devel

@@ -29,7 +29,6 @@ class BootcManager:
             Current container image name or None if not found
         """
         try:
-            # Get bootc status
             result = subprocess.run(
                 self.bootc_cmd + ["status", "--json"],
                 capture_output=True,
@@ -40,7 +39,6 @@ class BootcManager:
 
             status_data = json.loads(result.stdout)
 
-            # Extract current image from status
             if "spec" in status_data and "image" in status_data["spec"]:
                 image = status_data["spec"]["image"]["image"]
                 logger.info(f"Current bootc image: {image}")
@@ -88,12 +86,11 @@ class BootcManager:
         try:
             logger.info(f"Rebasing to image: {new_image}")
 
-            # Use bootc switch for rebasing to a different image
             result = subprocess.run(
                 self.bootc_cmd + ["switch", new_image],
                 capture_output=True,
                 text=True,
-                timeout=600,  # 10 minute timeout for rebase
+                timeout=1200,  # 20 minute timeout for rebase
             )
 
             if result.returncode == 0:
@@ -119,83 +116,6 @@ class BootcManager:
             logger.error(f"Unexpected error during rebase: {e}")
             return False
 
-    def get_available_images(self) -> List[str]:
-        """Get list of available container images.
-
-        Returns:
-            List of available image names
-        """
-        # This is a placeholder - bootc doesn't have a direct way to list available images
-        # In practice, this would need to query container registries or use other methods
-        logger.debug("Getting available images (placeholder implementation)")
-        return []
-
-    def get_system_info(self) -> Dict[str, Any]:
-        """Get system information relevant to bootc operations.
-
-        Returns:
-            Dictionary containing system information
-        """
-        info = {}
-
-        try:
-            # Get bootc status for comprehensive system info
-            result = subprocess.run(
-                self.bootc_cmd + ["status", "--json"],
-                capture_output=True,
-                text=True,
-                check=True,
-                timeout=30,
-            )
-
-            status_data = json.loads(result.stdout)
-            info["bootc_status"] = status_data
-
-            # Extract key information
-            if "spec" in status_data:
-                info["current_image"] = (
-                    status_data["spec"].get("image", {}).get("image")
-                )
-
-            if "status" in status_data:
-                info["booted"] = status_data["status"].get("booted")
-                info["staged"] = status_data["status"].get("staged")
-                info["rollback"] = status_data["status"].get("rollback")
-
-        except Exception as e:
-            logger.warning(f"Could not get comprehensive bootc status: {e}")
-
-        # Get OS release information
-        try:
-            with open("/etc/os-release", "r") as f:
-                os_release = {}
-                for line in f:
-                    if "=" in line:
-                        key, value = line.strip().split("=", 1)
-                        os_release[key] = value.strip('"')
-                info["os_release"] = os_release
-        except Exception as e:
-            logger.warning(f"Could not read OS release information: {e}")
-
-        return info
-
-    def is_bootc_system(self) -> bool:
-        """Check if this is a bootc-managed system.
-
-        Returns:
-            True if system is managed by bootc, False otherwise
-        """
-        try:
-            # Try to run bootc status to see if it works
-            result = subprocess.run(
-                self.bootc_cmd + ["status"], capture_output=True, text=True, timeout=10
-            )
-
-            return result.returncode == 0
-
-        except (FileNotFoundError, subprocess.TimeoutExpired, Exception):
-            return False
-
     def validate_image_reference(self, image: str) -> bool:
         """Validate that an image reference is properly formatted.
 
@@ -215,36 +135,3 @@ class BootcManager:
 
         # Simple name might be valid too
         return len(image.strip()) > 0
-
-    def check_privileges(self) -> bool:
-        """Check if we have the necessary privileges to run bootc commands.
-
-        Returns:
-            True if we can run bootc commands, False otherwise
-        """
-        if os.geteuid() == 0:
-            logger.debug("Running as root - bootc commands should work")
-            return True
-
-        if self.use_sudo:
-            try:
-                # Check if sudo is available (don't use -n to allow password prompts)
-                result = subprocess.run(
-                    ["which", "sudo"], capture_output=True, text=True, timeout=5
-                )
-                if result.returncode == 0:
-                    logger.debug(
-                        "sudo command found - will use sudo for bootc operations"
-                    )
-                    return True
-                else:
-                    logger.warning("sudo command not found")
-                    return False
-            except Exception as e:
-                logger.warning(f"Could not check for sudo availability: {e}")
-                return False
-        else:
-            logger.warning(
-                "Not running as root and sudo disabled - bootc commands may fail"
-            )
-            return False
