@@ -59,7 +59,7 @@ _update-version version:
 _commit-and-tag version:
     @echo "Committing and tagging version {{version}}"
     git add pyproject.toml eol-rebaser.spec src/eol_rebaser/__init__.py src/eol_rebaser/main.py
-    git commit -m "Bump version to {{version}}"
+    git commit -m "chore: bump version to {{version}}"
     git tag -a "v{{version}}" -m "Release version {{version}}"
     git push origin main
     git push origin "v{{version}}"
