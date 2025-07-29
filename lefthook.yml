@@ -1,0 +1,18 @@
+# lefthook.yml - Git hooks configuration
+# https://github.com/evilmartians/lefthook
+
+pre-commit:
+  parallel: true
+  commands:
+    format-python:
+      glob: "*.py"
+      run: uv run black {staged_files}
+      stage_fixed: true
+    lint-python:
+      glob: "*.py"
+      run: uv run flake8 {staged_files}
+      
+pre-push:
+  commands:
+    tests:
+      run: uv run pytest tests/ -v
