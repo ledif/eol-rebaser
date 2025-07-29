@@ -49,7 +49,9 @@ class ConfigManager:
         if self.config_dir.exists():
             logger.info(f"Loading drop-in configurations from {self.config_dir}")
             drop_ins = []
-            for conf_file in sorted(self.config_dir.glob("*.conf")):
+            for conf_file in sorted(self.config_dir.glob("*.yaml")) + sorted(
+                self.config_dir.glob("*.yml")
+            ):
                 logger.debug(f"Loading drop-in: {conf_file}")
                 drop_in_config = self._load_yaml_file(conf_file)
                 drop_ins.append(drop_in_config)
