@@ -1,5 +1,5 @@
 Name:           eol-rebaser
-Version:        0.1.0
+Version:        0.1.1
 Release:        1%{?dist}
 Summary:        Automatically rebase bootc systems when images reach end of life
 
