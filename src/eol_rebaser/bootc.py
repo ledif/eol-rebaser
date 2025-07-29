@@ -2,6 +2,7 @@
 
 import json
 import logging
+import os
 import subprocess
 from typing import Optional, Dict, Any, List
 
@@ -12,9 +13,14 @@ logger = logging.getLogger(__name__)
 class BootcManager:
     """Manages bootc operations."""
 
-    def __init__(self):
-        """Initialize bootc manager."""
-        self.bootc_cmd = "bootc"
+    def __init__(self, use_sudo: bool = True):
+        """Initialize bootc manager.
+
+        Args:
+            use_sudo: Whether to use sudo for bootc commands (default: True)
+        """
+        self.use_sudo = use_sudo
+        self.bootc_cmd = ["sudo", "bootc"] if use_sudo else ["bootc"]
 
     def get_current_image(self) -> Optional[str]:
         """Get the currently booted container image.
@@ -25,7 +31,7 @@ class BootcManager:
         try:
             # Get bootc status
             result = subprocess.run(
-                [self.bootc_cmd, "status", "--json"],
+                self.bootc_cmd + ["status", "--json"],
                 capture_output=True,
                 text=True,
                 check=True,
@@ -44,8 +50,13 @@ class BootcManager:
                 return None
 
         except subprocess.CalledProcessError as e:
-            logger.error(f"Failed to get bootc status: {e}")
-            logger.error(f"Command output: {e.stderr}")
+            if "root user" in str(e.stderr) or "root privilege" in str(e.stderr):
+                logger.error(
+                    "bootc requires root privileges. Make sure you have sudo access or run as root."
+                )
+            else:
+                logger.error(f"Failed to get bootc status: {e}")
+                logger.error(f"Command output: {e.stderr}")
             return None
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse bootc status JSON: {e}")
@@ -79,7 +90,7 @@ class BootcManager:
 
             # Use bootc switch for rebasing to a different image
             result = subprocess.run(
-                [self.bootc_cmd, "switch", new_image],
+                self.bootc_cmd + ["switch", new_image],
                 capture_output=True,
                 text=True,
                 timeout=600,  # 10 minute timeout for rebase
@@ -90,8 +101,15 @@ class BootcManager:
                 logger.info(f"stdout: {result.stdout}")
                 return True
             else:
-                logger.error(f"Rebase failed with return code {result.returncode}")
-                logger.error(f"stderr: {result.stderr}")
+                if "root user" in str(result.stderr) or "root privilege" in str(
+                    result.stderr
+                ):
+                    logger.error(
+                        "bootc requires root privileges. Make sure you have sudo access or run as root."
+                    )
+                else:
+                    logger.error(f"Rebase failed with return code {result.returncode}")
+                    logger.error(f"stderr: {result.stderr}")
                 return False
 
         except subprocess.TimeoutExpired:
@@ -123,7 +141,7 @@ class BootcManager:
         try:
             # Get bootc status for comprehensive system info
             result = subprocess.run(
-                [self.bootc_cmd, "status", "--json"],
+                self.bootc_cmd + ["status", "--json"],
                 capture_output=True,
                 text=True,
                 check=True,
@@ -170,7 +188,7 @@ class BootcManager:
         try:
             # Try to run bootc status to see if it works
             result = subprocess.run(
-                [self.bootc_cmd, "status"], capture_output=True, text=True, timeout=10
+                self.bootc_cmd + ["status"], capture_output=True, text=True, timeout=10
             )
 
             return result.returncode == 0
@@ -197,3 +215,36 @@ class BootcManager:
 
         # Simple name might be valid too
         return len(image.strip()) > 0
+
+    def check_privileges(self) -> bool:
+        """Check if we have the necessary privileges to run bootc commands.
+
+        Returns:
+            True if we can run bootc commands, False otherwise
+        """
+        if os.geteuid() == 0:
+            logger.debug("Running as root - bootc commands should work")
+            return True
+
+        if self.use_sudo:
+            try:
+                # Check if sudo is available (don't use -n to allow password prompts)
+                result = subprocess.run(
+                    ["which", "sudo"], capture_output=True, text=True, timeout=5
+                )
+                if result.returncode == 0:
+                    logger.debug(
+                        "sudo command found - will use sudo for bootc operations"
+                    )
+                    return True
+                else:
+                    logger.warning("sudo command not found")
+                    return False
+            except Exception as e:
+                logger.warning(f"Could not check for sudo availability: {e}")
+                return False
+        else:
+            logger.warning(
+                "Not running as root and sudo disabled - bootc commands may fail"
+            )
+            return False

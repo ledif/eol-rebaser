@@ -69,6 +69,12 @@ Examples:
         "--verbose", "-v", action="store_true", help="Enable verbose logging"
     )
 
+    parser.add_argument(
+        "--no-sudo",
+        action="store_true",
+        help="Don't use sudo for bootc commands (requires root)",
+    )
+
     parser.add_argument("--version", action="version", version="%(prog)s 0.1.0")
 
     return parser
@@ -88,7 +94,7 @@ def main() -> int:
         config = config_manager.load_config()
 
         # Initialize managers
-        bootc_manager = BootcManager()
+        bootc_manager = BootcManager(use_sudo=not args.no_sudo)
         notification_manager = NotificationManager()
         migrator = ImageMigrator(bootc_manager, notification_manager, config)
 
@@ -96,6 +102,8 @@ def main() -> int:
         current_image = bootc_manager.get_current_image()
         if not current_image:
             logger.error("Could not determine current bootc image")
+            logger.error("This may be due to insufficient privileges.")
+            logger.error("Try running with: sudo python -m eol_rebaser --check")
             return 1
 
         logger.info(f"Current image: {current_image}")
