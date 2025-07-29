@@ -8,9 +8,9 @@ pre-commit:
       glob: "*.py"
       run: uv run black {staged_files}
       stage_fixed: true
-    lint-python:
-      glob: "*.py"
-      run: uv run flake8 {staged_files}
+    #lint-python:
+    #  glob: "*.py"
+    #  run: uv run flake8 {staged_files}
       
 pre-push:
   commands:

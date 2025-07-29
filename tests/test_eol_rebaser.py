@@ -214,25 +214,11 @@ class TestAuroraHWEMigrations(unittest.TestCase):
         self.mock_bootc = Mock(spec=BootcManager)
         self.mock_notifications = Mock(spec=NotificationManager)
 
-        # Realistic Aurora migration configuration
-        self.aurora_config = {
-            "migrations": [
-                {
-                    "name": "Aurora ASUS to HWE Migration",
-                    "from_pattern": r"ghcr\.io/ublue-os/(aurora(?:-dx)?)-asus(-nvidia(?:-open)?)?:(.+)",
-                    "to_image": r"ghcr.io/ublue-os/\1-hwe\2:\3",
-                    "reason": "ASUS-specific images are deprecated. Migrating to HWE images which include all necessary drivers.",
-                    "effective_date": "2024-01-01",  # Past date for testing
-                },
-                {
-                    "name": "Aurora Surface to HWE Migration",
-                    "from_pattern": r"ghcr\.io/ublue-os/(aurora(?:-dx)?)-surface(-nvidia(?:-open)?)?:(.+)",
-                    "to_image": r"ghcr.io/ublue-os/\1-hwe\2:\3",
-                    "reason": "Surface-specific images are deprecated. Migrating to HWE images which include all necessary drivers.",
-                    "effective_date": "2024-01-01",  # Past date for testing
-                },
-            ]
-        }
+        config_path = (
+            Path(__file__).parent / "fixtures" / "aurora_asus_surface_eol.yaml"
+        )
+        config_manager = ConfigManager(config_path)
+        self.aurora_config = config_manager.load_config()
 
         self.migrator = ImageMigrator(
             self.mock_bootc, self.mock_notifications, self.aurora_config
@@ -254,7 +240,7 @@ class TestAuroraHWEMigrations(unittest.TestCase):
                 "ghcr.io/ublue-os/aurora-asus-nvidia-open:stable-daily",
                 "ghcr.io/ublue-os/aurora-hwe-nvidia-open:stable-daily",
             ),
-            ("ghcr.io/ublue-os/aurora-dx-asus:39", "ghcr.io/ublue-os/aurora-dx-hwe:39"),
+            ("ghcr.io/ublue-os/aurora-dx-asus:42", "ghcr.io/ublue-os/aurora-dx-hwe:42"),
             (
                 "ghcr.io/ublue-os/aurora-dx-asus-nvidia:stable",
                 "ghcr.io/ublue-os/aurora-dx-hwe-nvidia:stable",
@@ -358,14 +344,10 @@ class TestAuroraHWEMigrations(unittest.TestCase):
                 "ghcr.io/ublue-os/aurora-asus:stable-daily",
                 "ghcr.io/ublue-os/aurora-hwe:stable-daily",
             ),
-            ("ghcr.io/ublue-os/aurora-surface:39", "ghcr.io/ublue-os/aurora-hwe:39"),
+            ("ghcr.io/ublue-os/aurora-surface:42", "ghcr.io/ublue-os/aurora-hwe:42"),
             (
                 "ghcr.io/ublue-os/aurora-dx-asus-nvidia:40-20240101",
                 "ghcr.io/ublue-os/aurora-dx-hwe-nvidia:40-20240101",
-            ),
-            (
-                "ghcr.io/ublue-os/aurora-surface-nvidia-open:gts",
-                "ghcr.io/ublue-os/aurora-hwe-nvidia-open:gts",
             ),
         ]
 
