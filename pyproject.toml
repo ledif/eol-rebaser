@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "eol-rebaser"
-version = "0.1.1"
+version = "0.1.2"
 description = "Automatically rebase bootc systems when images reach end of life"
 readme = "README.md"
 license = {file = "LICENSE"}
@@ -48,7 +48,7 @@ eol_rebaser = ["data/*"]
 
 [tool.poetry]
 name = "eol-rebaser"
-version = "0.1.1"
+version = "0.1.2"
 description = "Automatically rebase bootc systems when their image streams reach end-of-life "
 authors = ["Adam Fidel <adam@fidel.cloud>"]
 readme = "README.md"
