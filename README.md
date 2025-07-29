@@ -1,6 +1,6 @@
 # eol-rebaser
 
-A utility to automatically rebase bootc systems when its currently booted image stream reaches end-of-life (EOL).
+Utility to automatically rebase bootc systems when its currently booted image stream reaches end-of-life (EOL).
 
 ## Usage
 
@@ -31,13 +31,13 @@ migrations:
   - name: "Aurora ASUS to HWE Migration"
     from_pattern: "ghcr\\.io/ublue-os/(aurora(?:-dx)?)-asus(-nvidia(?:-open)?)?:(.+)"
     to_image: "ghcr.io/ublue-os/\\1-hwe\\2:\\3"
-    reason: "ASUS-specific images are deprecated. Migrating to HWE images which include all necessary drivers."
+    reason: "ASUS-specific images are deprecated. Migrating to HWE images which include hardware support."
     effective_date: "2025-10-15"
 
   - name: "Aurora Surface to HWE Migration"
     from_pattern: "ghcr\\.io/ublue-os/(aurora(?:-dx)?)-surface(-nvidia(?:-open)?)?:(.+)"
     to_image: "ghcr.io/ublue-os/\\1-hwe\\2:\\3"
-    reason: "Surface-specific images are deprecated. Migrating to HWE images which include all necessary drivers."
+    reason: "Surface-specific images are deprecated. Migrating to HWE images which include hardware support."
     effective_date: "2025-10-15"
 ```
 
