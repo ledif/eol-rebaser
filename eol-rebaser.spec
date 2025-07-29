@@ -41,13 +41,8 @@ systemd service units should be provided by downstream distributions.
 %pyproject_install
 %pyproject_save_files eol_rebaser
 
-# Install systemd service files
-install -Dm644 systemd/eol-rebaser.service %{buildroot}%{_unitdir}/eol-rebaser.service
-install -Dm644 systemd/eol-rebaser.timer %{buildroot}%{_unitdir}/eol-rebaser.timer
-
-# Create configuration directory (but don't install configs - downstream responsibility)
-install -dm755 %{buildroot}%{_datadir}/eol-rebaser
-install -dm755 %{buildroot}%{_datadir}/eol-rebaser/migrations.yaml.d
+install -Dm644 data/eol-rebaser.service %{buildroot}%{_unitdir}/eol-rebaser.service
+install -Dm644 data/eol-rebaser.timer %{buildroot}%{_unitdir}/eol-rebaser.timer
 
 %post
 %systemd_post eol-rebaser.timer
@@ -63,8 +58,6 @@ install -dm755 %{buildroot}%{_datadir}/eol-rebaser/migrations.yaml.d
 %doc README.md
 %{_unitdir}/eol-rebaser.service
 %{_unitdir}/eol-rebaser.timer
-%dir %{_datadir}/eol-rebaser
-%dir %{_datadir}/eol-rebaser/migrations.yaml.d
 
 %changelog
 * Mon Jul 28 2025 Adam Fidel <adam@fidel.cloud> - 0.1.0-1
