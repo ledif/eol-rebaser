@@ -10,8 +10,8 @@ Source0:        https://github.com/ledif/eol-rebaser/archive/v%{version}/%{name}
 BuildArch:      noarch
 BuildRequires:  python3-devel
 BuildRequires:  python3-pip
-BuildRequires:  python3-build
 BuildRequires:  python3-wheel
+BuildRequires:  pyproject-rpm-macros
 BuildRequires:  systemd-rpm-macros
 
 Requires:       python3
@@ -31,8 +31,11 @@ systemd service units should be provided by downstream distributions.
 %prep
 %autosetup -n %{name}-%{version}
 
+%generate_buildrequires
+%pyproject_buildrequires
+
 %build
-%pyproject_build
+%pyproject_wheel
 
 %install
 %pyproject_install
