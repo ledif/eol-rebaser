@@ -21,7 +21,7 @@ sudo systemctl enable eol-rebaser.timer
 
 ## Configuration
 
-The main configuration file should be located at `/usr/share/eol-rebaser/migrations.conf`, with drop-in overrides supported in `/usr/share/eol-rebaser/migrations.conf.d/`.
+The main configuration file should be located at `/usr/share/eol-rebaser/migrations.yaml`, with drop-in overrides supported in `/usr/share/eol-rebaser/migrations.yaml.d/`.
 
 
 ### Example Configuration

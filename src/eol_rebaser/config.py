@@ -15,8 +15,8 @@ logger = logging.getLogger(__name__)
 class ConfigManager:
     """Manages configuration loading and validation."""
 
-    DEFAULT_CONFIG_PATH = Path("/usr/share/eol-rebaser/migrations.conf")
-    DEFAULT_CONFIG_DIR = Path("/usr/share/eol-rebaser/migrations.conf.d")
+    DEFAULT_CONFIG_PATH = Path("/usr/share/eol-rebaser/migrations.yaml")
+    DEFAULT_CONFIG_DIR = Path("/usr/share/eol-rebaser/migrations.yaml.d")
 
     def __init__(self, config_path: Optional[Path] = None):
         """Initialize configuration manager.

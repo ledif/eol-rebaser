@@ -58,7 +58,7 @@ Examples:
     parser.add_argument(
         "--config",
         type=Path,
-        help="Path to configuration file (default: /usr/share/eol-rebaser/migrations.conf)",
+        help="Path to configuration file (default: /usr/share/eol-rebaser/migrations.yaml)",
     )
 
     parser.add_argument(
