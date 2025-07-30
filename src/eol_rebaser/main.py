@@ -30,7 +30,7 @@ def setup_logging(verbose: bool = False) -> None:
 def create_parser() -> argparse.ArgumentParser:
     """Create command line argument parser."""
     parser = argparse.ArgumentParser(
-        description="EOL Rebaser - Automatically rebase bootc systems when images reach EOL",
+        description="Automatically rebase bootc systems when images reach EOL",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
