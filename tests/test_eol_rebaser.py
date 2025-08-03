@@ -207,16 +207,14 @@ class TestImageMigrator(unittest.TestCase):
 
 
 class TestAuroraHWEMigrations(unittest.TestCase):
-    """Test Aurora ASUS and Surface to HWE migration patterns."""
+    """Test Aurora ASUS, Surface, and HWE to base image migration patterns."""
 
     def setUp(self):
         """Set up test fixtures with Aurora migration config."""
         self.mock_bootc = Mock(spec=BootcManager)
         self.mock_notifications = Mock(spec=NotificationManager)
 
-        config_path = (
-            Path(__file__).parent / "fixtures" / "aurora_asus_surface_eol.yaml"
-        )
+        config_path = Path(__file__).parent / "fixtures" / "aurora_hwe_eol.yaml"
         config_manager = ConfigManager(config_path)
         self.aurora_config = config_manager.load_config()
 
@@ -225,40 +223,39 @@ class TestAuroraHWEMigrations(unittest.TestCase):
         )
 
     def test_asus_migration_patterns(self):
-        """Test ASUS to HWE migration patterns."""
+        """Test ASUS to base Aurora migration patterns."""
         # Test cases: (source_image, expected_target)
         asus_test_cases = [
             (
                 "ghcr.io/ublue-os/aurora-asus:stable",
-                "ghcr.io/ublue-os/aurora-hwe:stable",
+                "ghcr.io/ublue-os/aurora:stable",
             ),
             (
                 "ghcr.io/ublue-os/aurora-asus-nvidia:latest",
-                "ghcr.io/ublue-os/aurora-hwe-nvidia:latest",
+                "ghcr.io/ublue-os/aurora-nvidia:latest",
             ),
             (
                 "ghcr.io/ublue-os/aurora-asus-nvidia-open:stable-daily",
-                "ghcr.io/ublue-os/aurora-hwe-nvidia-open:stable-daily",
+                "ghcr.io/ublue-os/aurora-nvidia-open:stable-daily",
             ),
-            ("ghcr.io/ublue-os/aurora-dx-asus:42", "ghcr.io/ublue-os/aurora-dx-hwe:42"),
+            ("ghcr.io/ublue-os/aurora-dx-asus:42", "ghcr.io/ublue-os/aurora-dx:42"),
             (
                 "ghcr.io/ublue-os/aurora-dx-asus-nvidia:stable",
-                "ghcr.io/ublue-os/aurora-dx-hwe-nvidia:stable",
+                "ghcr.io/ublue-os/aurora-dx-nvidia:stable",
             ),
             (
                 "ghcr.io/ublue-os/aurora-dx-asus-nvidia-open:latest",
-                "ghcr.io/ublue-os/aurora-dx-hwe-nvidia-open:latest",
+                "ghcr.io/ublue-os/aurora-dx-nvidia-open:latest",
             ),
         ]
 
         for source_image, expected_target in asus_test_cases:
             with self.subTest(source=source_image, target=expected_target):
-                # Find the migration
                 migration = self.migrator.find_migration(source_image)
                 self.assertIsNotNone(
                     migration, f"No migration found for {source_image}"
                 )
-                self.assertEqual(migration["name"], "Aurora ASUS to HWE Migration")
+                self.assertEqual(migration["name"], "ASUS end-of-life")
 
                 # Test target image resolution
                 resolved_target = self.migrator._resolve_target_image(
@@ -271,32 +268,32 @@ class TestAuroraHWEMigrations(unittest.TestCase):
                 )
 
     def test_surface_migration_patterns(self):
-        """Test Surface to HWE migration patterns."""
+        """Test Surface to base Aurora migration patterns."""
         # Test cases: (source_image, expected_target)
         surface_test_cases = [
             (
                 "ghcr.io/ublue-os/aurora-surface:stable",
-                "ghcr.io/ublue-os/aurora-hwe:stable",
+                "ghcr.io/ublue-os/aurora:stable",
             ),
             (
                 "ghcr.io/ublue-os/aurora-surface-nvidia:latest",
-                "ghcr.io/ublue-os/aurora-hwe-nvidia:latest",
+                "ghcr.io/ublue-os/aurora-nvidia:latest",
             ),
             (
                 "ghcr.io/ublue-os/aurora-surface-nvidia-open:stable-daily",
-                "ghcr.io/ublue-os/aurora-hwe-nvidia-open:stable-daily",
+                "ghcr.io/ublue-os/aurora-nvidia-open:stable-daily",
             ),
             (
-                "ghcr.io/ublue-os/aurora-dx-surface:39",
-                "ghcr.io/ublue-os/aurora-dx-hwe:39",
+                "ghcr.io/ublue-os/aurora-dx-surface:42",
+                "ghcr.io/ublue-os/aurora-dx:42",
             ),
             (
                 "ghcr.io/ublue-os/aurora-dx-surface-nvidia:stable",
-                "ghcr.io/ublue-os/aurora-dx-hwe-nvidia:stable",
+                "ghcr.io/ublue-os/aurora-dx-nvidia:stable",
             ),
             (
                 "ghcr.io/ublue-os/aurora-dx-surface-nvidia-open:latest",
-                "ghcr.io/ublue-os/aurora-dx-hwe-nvidia-open:latest",
+                "ghcr.io/ublue-os/aurora-dx-nvidia-open:latest",
             ),
         ]
 
@@ -307,7 +304,7 @@ class TestAuroraHWEMigrations(unittest.TestCase):
                 self.assertIsNotNone(
                     migration, f"No migration found for {source_image}"
                 )
-                self.assertEqual(migration["name"], "Aurora Surface to HWE Migration")
+                self.assertEqual(migration["name"], "Surface end-of-life")
 
                 # Test target image resolution
                 resolved_target = self.migrator._resolve_target_image(
@@ -319,17 +316,66 @@ class TestAuroraHWEMigrations(unittest.TestCase):
                     f"Expected {source_image} -> {expected_target}, got {resolved_target}",
                 )
 
-    def test_no_migration_for_non_matching_images(self):
-        """Test that non-matching images don't get migrated."""
+    def test_hwe_migration_patterns(self):
+        """Test HWE to base Aurora migration patterns."""
+        # Test cases: (source_image, expected_target)
+        hwe_test_cases = [
+            (
+                "ghcr.io/ublue-os/aurora-hwe:stable",
+                "ghcr.io/ublue-os/aurora:stable",
+            ),
+            (
+                "ghcr.io/ublue-os/aurora-hwe-nvidia:latest",
+                "ghcr.io/ublue-os/aurora-nvidia:latest",
+            ),
+            (
+                "ghcr.io/ublue-os/aurora-hwe-nvidia-open:stable-daily",
+                "ghcr.io/ublue-os/aurora-nvidia-open:stable-daily",
+            ),
+            (
+                "ghcr.io/ublue-os/aurora-dx-hwe:42",
+                "ghcr.io/ublue-os/aurora-dx:42",
+            ),
+            (
+                "ghcr.io/ublue-os/aurora-dx-hwe-nvidia:stable",
+                "ghcr.io/ublue-os/aurora-dx-nvidia:stable",
+            ),
+            (
+                "ghcr.io/ublue-os/aurora-dx-hwe-nvidia-open:latest",
+                "ghcr.io/ublue-os/aurora-dx-nvidia-open:latest",
+            ),
+        ]
+
+        for source_image, expected_target in hwe_test_cases:
+            with self.subTest(source=source_image, target=expected_target):
+                migration = self.migrator.find_migration(source_image)
+                self.assertIsNotNone(
+                    migration, f"No migration found for {source_image}"
+                )
+                self.assertEqual(migration["name"], "HWE end-of-life")
+
+                # Test target image resolution
+                resolved_target = self.migrator._resolve_target_image(
+                    migration, source_image
+                )
+                self.assertEqual(
+                    resolved_target,
+                    expected_target,
+                    f"Expected {source_image} -> {expected_target}, got {resolved_target}",
+                )
+
+    def test_no_migration_for_base_images(self):
+        """Test that base Aurora images don't get migrated."""
         # These images should NOT trigger any migration
         non_matching_images = [
-            "ghcr.io/ublue-os/aurora-dx:stable",  # No ASUS or Surface
-            "ghcr.io/ublue-os/aurora:latest",  # Base aurora
-            "ghcr.io/ublue-os/aurora-hwe:stable",  # Already HWE
-            "ghcr.io/ublue-os/aurora-dx-hwe-nvidia:latest",  # Already HWE
-            "ghcr.io/ublue-os/bluefin:stable",  # Different project
-            "ghcr.io/ublue-os/bazzite:latest",  # Different project
-            "ghcr.io/ublue-os/aurora-gdx:stable",  # Different variant
+            "ghcr.io/ublue-os/aurora:stable",
+            "ghcr.io/ublue-os/aurora-nvidia:latest",
+            "ghcr.io/ublue-os/aurora-nvidia-open:stable",
+            "ghcr.io/ublue-os/aurora-dx:42",
+            "ghcr.io/ublue-os/aurora-dx-nvidia:stable",
+            "ghcr.io/ublue-os/aurora-dx-nvidia-open:latest",
+            "ghcr.io/ublue-os/bluefin:stable",
+            "ghcr.io/ublue-os/bazzite:latest",
         ]
 
         for image in non_matching_images:
@@ -342,12 +388,19 @@ class TestAuroraHWEMigrations(unittest.TestCase):
         test_cases = [
             (
                 "ghcr.io/ublue-os/aurora-asus:stable-daily",
-                "ghcr.io/ublue-os/aurora-hwe:stable-daily",
+                "ghcr.io/ublue-os/aurora:stable-daily",
             ),
-            ("ghcr.io/ublue-os/aurora-surface:42", "ghcr.io/ublue-os/aurora-hwe:42"),
             (
-                "ghcr.io/ublue-os/aurora-dx-asus-nvidia:40-20240101",
+                "ghcr.io/ublue-os/aurora-surface-nvidia:42",
+                "ghcr.io/ublue-os/aurora-nvidia:42",
+            ),
+            (
                 "ghcr.io/ublue-os/aurora-dx-hwe-nvidia:40-20240101",
+                "ghcr.io/ublue-os/aurora-dx-nvidia:40-20240101",
+            ),
+            (
+                "ghcr.io/ublue-os/aurora-hwe-nvidia-open:gts",
+                "ghcr.io/ublue-os/aurora-nvidia-open:gts",
             ),
         ]
 
@@ -370,7 +423,7 @@ class TestAuroraHWEMigrations(unittest.TestCase):
     def test_full_migration_execution(self):
         """Test complete migration execution for an ASUS image."""
         source_image = "ghcr.io/ublue-os/aurora-dx-asus-nvidia:stable"
-        expected_target = "ghcr.io/ublue-os/aurora-dx-hwe-nvidia:stable"
+        expected_target = "ghcr.io/ublue-os/aurora-dx-nvidia:stable"
 
         # Setup mocks
         self.mock_bootc.get_current_image.return_value = source_image
@@ -387,7 +440,7 @@ class TestAuroraHWEMigrations(unittest.TestCase):
         self.assertTrue(success)
         self.mock_bootc.rebase_to_image.assert_called_once_with(expected_target)
         self.mock_notifications.notify_migration_success.assert_called_once_with(
-            "Aurora ASUS to HWE Migration", expected_target
+            "ASUS end-of-life", expected_target
         )
 
 
@@ -430,5 +483,4 @@ class TestNotificationManager(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
     unittest.main()
