@@ -1,8 +1,10 @@
 """User notification system for EOL Rebaser."""
 
+import json
 import logging
+import os
 import subprocess
-from typing import Optional
+from typing import Optional, Tuple
 
 
 logger = logging.getLogger(__name__)
@@ -13,7 +15,51 @@ class NotificationManager:
 
     def __init__(self):
         """Initialize notification manager."""
+        self.user_session = (
+            self._get_active_user_session() if os.getuid() == 0 else None
+        )
         self.desktop_available = self._check_desktop_environment()
+
+    def _get_active_user_session(self) -> Optional[Tuple[str, str]]:
+        """Get active user session information when running as root.
+
+        Returns:
+            Tuple of (username, xdg_runtime_path) if active user found, None otherwise
+        """
+        try:
+            result = subprocess.run(
+                ["loginctl", "list-users", "-j"],
+                capture_output=True,
+                text=True,
+                check=True,
+                timeout=10,
+            )
+
+            users = json.loads(result.stdout)
+
+            # Only notify first active user
+            for user in users:
+                if user.get("state") == "active":
+                    username = user.get("user")
+                    uid = user.get("uid")
+
+                    if username and uid:
+                        xdg_runtime_path = f"/run/user/{uid}"
+                        logger.debug(
+                            f"Found active user session: {username} (uid: {uid})"
+                        )
+                        return username, xdg_runtime_path
+
+            logger.warning("No active user session found")
+            return None
+
+        except (
+            subprocess.CalledProcessError,
+            json.JSONDecodeError,
+            FileNotFoundError,
+        ) as e:
+            logger.warning(f"Failed to get active user session: {e}")
+            return None
 
     def _check_desktop_environment(self) -> bool:
         """Check if desktop environment is available for notifications.
@@ -21,6 +67,24 @@ class NotificationManager:
         Returns:
             True if desktop notifications are available, False otherwise
         """
+        if os.getuid() == 0:
+            try:
+                # Check if loginctl is available for user session management
+                subprocess.run(
+                    ["which", "loginctl"], capture_output=True, check=True, timeout=5
+                )
+                logger.debug(
+                    "Running as root, will use loginctl for user notifications"
+                )
+                return True
+            except (
+                subprocess.CalledProcessError,
+                subprocess.TimeoutExpired,
+                FileNotFoundError,
+            ):
+                logger.debug("loginctl not available, desktop notifications disabled")
+                return False
+
         try:
             subprocess.run(
                 ["which", "notify-send"], capture_output=True, check=True, timeout=5
@@ -162,18 +226,20 @@ class NotificationManager:
             else:
                 cmd.extend(["--urgency=normal"])
 
-            logger.debug(f"Running notification command: {' '.join(cmd)}")
+            # If running as root, send notification to active user
+            if os.getuid() == 0 and self.user_session:
+                username, xdg_runtime_path = self.user_session
 
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+                env = os.environ.copy()
+                env["DBUS_SESSION_BUS_ADDRESS"] = f"unix:path={xdg_runtime_path}/bus"
 
-            if result.returncode == 0:
-                logger.debug(f"Desktop notification sent successfully: {title}")
+                sudo_cmd = ["sudo", "-u", username] + cmd
+                subprocess.run(sudo_cmd, capture_output=True, timeout=10, env=env)
+                logger.debug(f"Desktop notification sent to user {username}: {title}")
             else:
-                logger.warning(
-                    f"notify-send failed with return code {result.returncode}"
-                )
-                logger.warning(f"stderr: {result.stderr}")
-                logger.warning(f"stdout: {result.stdout}")
+                # Standard notification for non-root users
+                subprocess.run(cmd, capture_output=True, timeout=10)
+                logger.debug(f"Desktop notification sent: {title}")
 
         except Exception as e:
             logger.warning(f"Failed to send desktop notification: {e}")
