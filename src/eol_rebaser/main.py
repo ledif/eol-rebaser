@@ -75,7 +75,7 @@ Examples:
         help="Don't use sudo for bootc commands (requires root)",
     )
 
-    parser.add_argument("--version", action="version", version="%(prog)s 0.1.3")
+    parser.add_argument("--version", action="version", version="%(prog)s 0.2.0")
 
     return parser
 
